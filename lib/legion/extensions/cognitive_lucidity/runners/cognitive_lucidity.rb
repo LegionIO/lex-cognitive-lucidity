@@ -53,14 +53,16 @@ module Legion
             Legion::Logging.debug "[cognitive_lucidity] lucidity_status active=#{!active.nil?}"
             {
               success:      true,
-              active_dream: active ? {
-                id:             active.id,
-                theme:          active.theme,
-                lucidity_level: active.lucidity_level,
-                stability:      active.stability,
-                lucidity_label: active.lucidity_label
-              } : nil,
-              report: report
+              active_dream: if active
+                              {
+                                id:             active.id,
+                                theme:          active.theme,
+                                lucidity_level: active.lucidity_level,
+                                stability:      active.stability,
+                                lucidity_label: active.lucidity_label
+                              }
+                            end,
+              report:       report
             }
           rescue ArgumentError => e
             { success: false, error: e.message }

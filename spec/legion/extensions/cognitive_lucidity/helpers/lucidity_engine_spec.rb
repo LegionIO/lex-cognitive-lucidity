@@ -3,8 +3,8 @@
 RSpec.describe Legion::Extensions::CognitiveLucidity::Helpers::LucidityEngine do
   subject(:engine) { described_class.new }
 
-  def start_dream(theme: :forest, content: 'walking through trees', **opts)
-    engine.begin_dream(theme: theme, content: content, **opts)
+  def start_dream(theme: :forest, content: 'walking through trees', **)
+    engine.begin_dream(theme: theme, content: content, **)
   end
 
   describe '#begin_dream' do

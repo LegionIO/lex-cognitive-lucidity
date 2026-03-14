@@ -18,15 +18,15 @@ module Legion
             logic_check
           ].freeze
 
-          LUCIDITY_DECAY       = 0.05
+          LUCIDITY_DECAY = 0.05
           FALSE_AWAKENING_CHANCE = 0.1
 
           DREAM_QUALITY_LABELS = {
-            0.0..0.2  => :poor,
-            0.2..0.4  => :fragmented,
-            0.4..0.6  => :ordinary,
-            0.6..0.8  => :vivid,
-            0.8..1.0  => :hyper_vivid
+            0.0..0.2 => :poor,
+            0.2..0.4 => :fragmented,
+            0.4..0.6 => :ordinary,
+            0.6..0.8 => :vivid,
+            0.8..1.0 => :hyper_vivid
           }.freeze
 
           module_function

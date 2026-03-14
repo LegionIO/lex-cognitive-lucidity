@@ -7,9 +7,8 @@ module Legion
     module CognitiveLucidity
       module Helpers
         class DreamState
-          attr_reader :id, :lucidity_level, :awareness, :content, :theme,
-                      :vividness, :stability, :emotional_tone, :started_at,
-                      :reality_tests_performed, :false_awakening_count, :steered
+          attr_reader :id, :lucidity_level, :awareness, :content, :theme, :vividness, :stability, :emotional_tone, :started_at, :reality_tests_performed,
+                      :false_awakening_count, :steered, :ended_at
 
           def initialize(theme:, content:, vividness: 0.5, stability: 0.7,
                          emotional_tone: :neutral, lucidity_level: 0.0, **)
@@ -52,10 +51,10 @@ module Legion
 
             result = perform_reality_test(test_type)
             @reality_tests_performed << {
-              test_type:   test_type,
-              result:      result[:outcome],
+              test_type:      test_type,
+              result:         result[:outcome],
               lucidity_delta: result[:lucidity_delta],
-              tested_at:   Time.now.utc
+              tested_at:      Time.now.utc
             }
 
             if result[:false_awakening]
@@ -94,10 +93,6 @@ module Legion
           def end!
             @active = false
             @ended_at = Time.now.utc
-          end
-
-          def ended_at
-            @ended_at
           end
 
           def duration_seconds

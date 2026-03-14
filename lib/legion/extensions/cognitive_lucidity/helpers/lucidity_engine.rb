@@ -26,10 +26,10 @@ module Legion
             )
             @dreams[state.id] = state
             {
-              dream_id:      state.id,
-              theme:         state.theme,
+              dream_id:       state.id,
+              theme:          state.theme,
               lucidity_level: state.lucidity_level,
-              stability:     state.stability
+              stability:      state.stability
             }
           end
 
@@ -40,11 +40,11 @@ module Legion
 
             result = state.reality_test!(test_type.to_sym)
             {
-              success:        true,
-              dream_id:       dream_id,
-              outcome:        result[:outcome],
-              lucidity_delta: result[:lucidity_delta],
-              lucidity_level: state.lucidity_level,
+              success:         true,
+              dream_id:        dream_id,
+              outcome:         result[:outcome],
+              lucidity_delta:  result[:lucidity_delta],
+              lucidity_level:  state.lucidity_level,
               false_awakening: result[:false_awakening]
             }
           rescue ArgumentError => e
@@ -70,11 +70,11 @@ module Legion
             add_journal_entry(entry)
 
             {
-              success:          true,
-              dream_id:         dream_id,
-              journal_entry_id: entry.id,
+              success:           true,
+              dream_id:          dream_id,
+              journal_entry_id:  entry.id,
               lucidity_achieved: entry.lucidity_achieved,
-              duration_seconds: entry.duration_seconds
+              duration_seconds:  entry.duration_seconds
             }
           end
 
@@ -87,63 +87,69 @@ module Legion
           end
 
           def lucidity_report
-            entries = @journal
-            return base_report if entries.empty?
+            return base_report if @journal.empty?
 
-            total         = entries.size
-            avg_lucidity  = entries.sum { |e| e.lucidity_achieved } / total.to_f
-            false_awakenings = entries.sum { |e| e.false_awakening_count }
-            steered_count = entries.count { |e| e.steered }
+            {
+              total_dreams:          @journal.size,
+              avg_lucidity:          compute_avg_lucidity,
+              false_awakening_count: @journal.sum(&:false_awakening_count),
+              steered_count:         @journal.count(&:steered),
+              test_success_rates:    compute_test_success_rates
+            }
+          end
 
-            test_totals   = Hash.new(0)
-            test_passes   = Hash.new(0)
-            entries.each do |entry|
+          def most_lucid_dreams(limit: 5, **)
+            sorted = @journal.sort_by { |e| -e.lucidity_achieved }
+            sorted.first(limit).map(&:to_h)
+          end
+
+          def theme_analysis
+            theme_map, lucidity_by_theme = build_theme_maps
+            results = theme_map.map do |theme, count|
+              avg = compute_theme_avg(lucidity_by_theme[theme])
+              { theme: theme, occurrences: count, avg_lucidity: avg }
+            end
+            results.sort_by { |t| -t[:occurrences] }
+          end
+
+          private
+
+          def compute_avg_lucidity
+            (@journal.sum(&:lucidity_achieved) / @journal.size.to_f).round(10)
+          end
+
+          def compute_test_success_rates
+            test_totals = Hash.new(0)
+            test_passes = Hash.new(0)
+            @journal.each do |entry|
               entry.reality_tests_performed.each do |rt|
                 test_totals[rt[:test_type]] += 1
                 test_passes[rt[:test_type]] += 1 if rt[:result] == :passed
               end
             end
-
-            success_rates = test_totals.transform_values do |count|
-              test_type = test_totals.key(count)
-              count.positive? ? (test_passes[test_type].to_f / count).round(10) : 0.0
+            test_totals.to_h do |test_type, count|
+              rate = count.positive? ? (test_passes[test_type].to_f / count).round(10) : 0.0
+              [test_type, rate]
             end
-
-            {
-              total_dreams:          total,
-              avg_lucidity:          avg_lucidity.round(10),
-              false_awakening_count: false_awakenings,
-              steered_count:         steered_count,
-              test_success_rates:    success_rates
-            }
           end
 
-          def most_lucid_dreams(limit: 5, **)
-            @journal
-              .sort_by { |e| -e.lucidity_achieved }
-              .first(limit)
-              .map(&:to_h)
-          end
-
-          def theme_analysis
+          def build_theme_maps
             theme_map = Hash.new(0)
             lucidity_by_theme = Hash.new { |h, k| h[k] = [] }
-
             @journal.each do |entry|
               Array(entry.themes).each do |theme|
                 theme_map[theme] += 1
                 lucidity_by_theme[theme] << entry.lucidity_achieved
               end
             end
-
-            theme_map.map do |theme, count|
-              values = lucidity_by_theme[theme]
-              avg    = values.empty? ? 0.0 : (values.sum / values.size.to_f).round(10)
-              { theme: theme, occurrences: count, avg_lucidity: avg }
-            end.sort_by { |t| -t[:occurrences] }
+            [theme_map, lucidity_by_theme]
           end
 
-          private
+          def compute_theme_avg(values)
+            return 0.0 if values.empty?
+
+            (values.sum / values.size.to_f).round(10)
+          end
 
           def add_journal_entry(entry)
             @journal.shift while @journal.size >= Constants::MAX_JOURNAL_ENTRIES

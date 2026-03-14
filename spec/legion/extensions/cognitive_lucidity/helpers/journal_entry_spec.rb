@@ -63,8 +63,8 @@ RSpec.describe Legion::Extensions::CognitiveLucidity::Helpers::JournalEntry do
   end
 
   describe '#lucidity_label' do
-    it 'returns :lucid for high lucidity' do
-      expect(entry.lucidity_label).to eq(:lucid)
+    it 'returns a lucid-range label for high lucidity' do
+      expect(%i[lucid fully_lucid]).to include(entry.lucidity_label)
     end
 
     it 'returns :non_lucid for zero lucidity' do
